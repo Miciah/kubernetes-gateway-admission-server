@@ -1,0 +1,13 @@
+apiVersion: apiregistration.k8s.io/v1
+kind: APIService
+metadata:
+  name: v1alpha2.admission.networking.x-k8s.io
+spec:
+  caBundle: CA
+  group: admission.networking.x-k8s.io
+  groupPriorityMinimum: 1000
+  versionPriority: 15
+  service:
+    name: server
+    namespace: gateway-admission-server
+  version: v1alpha2

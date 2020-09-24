@@ -1,0 +1,27 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: gateways.admission.networking.x-k8s.io
+webhooks:
+- name: gateways.admission.networking.x-k8s.io
+  admissionReviewVersions:
+  - v1beta1
+  clientConfig:
+    service:
+      namespace: gateway-admission-server
+      name: server
+      path: /apis/admission.networking.x-k8s.io/v1alpha2/gateways
+    # oc -n openshift-config-managed get configmaps/service-ca -o go-template --template='{{index .data "ca-bundle.crt"}}' | base64 | tr -d '\n' | xsel -i -b
+    caBundle: KUBE_CA_HERE
+  failurePolicy: Fail
+  rules:
+  - operations:
+    - CREATE
+    - UPDATE
+    apiGroups:
+    - networking.x-k8s.io
+    apiVersions:
+    - v1alpha1
+    resources:
+    - gateways
+  sideEffects: None

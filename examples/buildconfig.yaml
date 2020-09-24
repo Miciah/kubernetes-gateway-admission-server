@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: gateway-admission-server-build
+  annotations:
+    description: "Template for building the gateway admission server."
+objects:
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    name: gateway-admission-server
+    namespace: gateway-admission-server
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    name: gateway-admission-server
+    namespace: gateway-admission-server
+  spec:
+    output:
+      to:
+        kind: ImageStreamTag
+        name: gateway-admission-server:latest
+    source:
+      git:
+        uri: ${GIT_URL}
+        ref: ${GIT_BRANCH}
+      type: Git
+      dockerfile: |
+        FROM registry.svc.ci.openshift.org/ocp/builder:rhel-8-golang-1.15-openshift-4.6 AS builder
+        WORKDIR /kubernetes-gateway-admission-server
+        COPY . .
+        RUN go build ./cmd/gatewayadmissionserver
+        FROM registry.svc.ci.openshift.org/ocp/4.6:base
+        COPY --from=builder /kubernetes-gateway-admission-server/gatewayadmissionserver /bin/
+        LABEL io.k8s.display-name="Gateway admission server." \
+              io.k8s.description="This is the image for the gateway admission server."
+    strategy:
+      type: Docker
+parameters:
+- description: 'URL for the gateway admission server Git repository'
+  name: GIT_URL
+  value: https://github.com/Miciah/kubernetes-gateway-admission-server
+- description: 'Git branch'
+  name: GIT_BRANCH
+  value: master

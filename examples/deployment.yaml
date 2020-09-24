@@ -1,0 +1,40 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: server
+  namespace: gateway-admission-server
+spec:
+  selector:
+    matchLabels:
+      name: gateway-admission-server
+  template:
+    metadata:
+      labels:
+        name: gateway-admission-server
+        role: webhook
+    spec:
+      containers:
+      - command: ["/bin/gatewayadmissionserver", "--secure-port=8443", "--v=8"]
+        image: image-registry.openshift-image-registry.svc:5000/gateway-admission-server/gateway-admission-server:latest
+        imagePullPolicy: Always
+        name: gateway-admission-server
+        ports:
+        - name: https
+          containerPort: 8443
+          protocol: TCP
+        terminationMessagePolicy: FallbackToLogsOnError
+        volumeMounts:
+        - mountPath: /apiserver.local.config/certificates
+          name: serving-certificate
+          readOnly: true
+      serviceAccountName: server
+      volumes:
+      - name: serving-certificate
+        secret:
+          defaultMode: 420
+          items:
+          - key: tls.crt
+            path: apiserver.crt
+          - key: tls.key
+            path: apiserver.key
+          secretName: serving-cert
